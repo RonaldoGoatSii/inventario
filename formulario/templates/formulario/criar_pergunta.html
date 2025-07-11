@@ -1,0 +1,156 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8" />
+    <title>Criar Quiz</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+</head>
+<body>
+<div class="container mt-5">
+    <h1>Criar Quiz</h1>
+
+    <!-- Formulário para criar o quiz -->
+    {% if not quiz %}
+      <form method="post" class="mb-4">
+          {% csrf_token %}
+          <div class="mb-3">
+              <label for="{{ form.titulo.id_for_label }}" class="form-label">Título do Quiz</label>
+              {{ form.titulo }}
+          </div>
+          <button type="submit" class="btn btn-primary">Salvar o Quiz</button>
+      </form>
+    {% else %}
+      <h2>Adicionar Perguntas para: {{ quiz.titulo }}</h2>
+
+      <form id="perguntas-form" method="post">
+          {% csrf_token %}
+          <div id="perguntas-container"></div>
+
+          <button type="button" id="btn-adicionar-pergunta" class="btn btn-secondary mb-3">
+              Adicionar uma Pergunta
+          </button>
+
+          <button type="submit" class="btn btn-success mb-3">Salvar as Perguntas</button>
+      </form>
+
+      <h3 class="mt-4">Perguntas adicionadas:</h3>
+      <ul id="perguntas-list" class="list-group">
+          {% for pergunta in perguntas %}
+              <li class="list-group-item">{{ pergunta.texto }} ({{ pergunta.get_tipo_display }})
+                  {% if pergunta.tipo == 'curta' %}
+                      - Qual é a resposta Correta: {{ pergunta.resposta_correta }}
+                  {% elif pergunta.tipo == 'multipla' %}
+                      <ul>
+                          {% for opcao in pergunta.opcoes.all %}
+                              <li>{{ opcao.texto_opcao }}</li>
+                          {% endfor %}
+                      </ul>
+                  {% endif %}
+              </li>
+          {% empty %}
+              <li class="list-group-item">Nenhuma pergunta foi adicionada.</li>
+          {% endfor %}
+      </ul>
+
+      <form method="post" action="{% url 'finalizar_quiz' quiz.id %}" class="mt-4">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-success">Finalizar o Quiz</button>
+      </form>
+    {% endif %}
+</div>
+
+<template id="template-pergunta">
+  <div class="pergunta-bloco border p-3 mb-3">
+    <div class="mb-3">
+      <label>Texto da Pergunta</label>
+      <input type="text" name="texto[]" class="form-control mb-2" placeholder="Qual é a pergunta?" required>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Tipo da Pergunta</label>
+      <select name="tipo[]" class="form-select tipo-pergunta" required>
+        <option value="texto">Texto</option>
+        <option value="curta">Resposta Curta</option>
+        <option value="multipla">Escolha Múltipla</option>
+      </select>
+    </div>
+
+    <div class="opcoes-container mb-3" style="display:none;">
+      <label>Opções</label>
+      <div class="opcoes-list mb-2"></div>
+      <button type="button" class="btn btn-secondary btn-sm btn-add-opcao">Adicionar uma nova Opção</button>
+    </div>
+
+    <!-- Novo campo para resposta curta -->
+    <div class="resposta-curta-container mb-3" style="display:none;">
+      <label>Resposta Curta</label>
+      <input type="text" name="resposta_curta[]" class="form-control mb-2" placeholder="Escolha a resposta correta">
+    </div>
+
+    <!-- Novo campo para texto livre -->
+    <div class="texto-livre-container mb-3" style="display:none;">
+      <label>Conteúdo do Texto Livre</label>
+      <textarea name="texto_livre[]" class="form-control mb-2" placeholder="O seu Texto"></textarea>
+    </div>
+
+    <button type="button" class="btn btn-danger btn-sm btn-remover">Remover Pergunta</button>
+  </div>
+</template>
+
+<script>
+  const btnAddPergunta = document.getElementById('btn-adicionar-pergunta');
+  const container = document.getElementById('perguntas-container');
+  const template = document.getElementById('template-pergunta').content;
+
+  if (btnAddPergunta) {
+    btnAddPergunta.addEventListener('click', () => {
+      const clone = document.importNode(template, true);
+      container.appendChild(clone);
+      atualizarEventos();
+    });
+    btnAddPergunta.click(); // começa com uma pergunta
+  }
+
+  function atualizarEventos() {
+    container.querySelectorAll('.pergunta-bloco').forEach(bloco => {
+      const select = bloco.querySelector('.tipo-pergunta');
+      const opcoesContainer = bloco.querySelector('.opcoes-container');
+      const opcoesList = bloco.querySelector('.opcoes-list');
+      const btnAddOpcao = bloco.querySelector('.btn-add-opcao');
+      const respostaCurtaContainer = bloco.querySelector('.resposta-curta-container');
+      const textoLivreContainer = bloco.querySelector('.texto-livre-container');
+
+      select.onchange = () => {
+        // Esconder todos os campos específicos primeiro
+        opcoesContainer.style.display = 'none';
+        opcoesList.innerHTML = ''; // Limpar opções ao mudar o tipo
+        respostaCurtaContainer.style.display = 'none';
+        textoLivreContainer.style.display = 'none';
+
+        if (select.value === 'multipla') {
+          opcoesContainer.style.display = 'block';
+        } else if (select.value === 'curta') {
+          respostaCurtaContainer.style.display = 'block';
+        } else if (select.value === 'texto') {
+          textoLivreContainer.style.display = 'block';
+        }
+      };
+      select.dispatchEvent(new Event('change'));
+
+      btnAddOpcao.onclick = () => {
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.name = 'opcao[]'; // Todas as opções vão para uma lista global
+        input.classList.add('form-control', 'mb-2');
+        input.placeholder = 'Opção';
+        opcoesList.appendChild(input);
+      };
+
+      bloco.querySelector('.btn-remover').onclick = () => bloco.remove();
+    });
+  }
+</script>
+</body>
+<a href="{% url 'quiz_home' %}" class="btn btn-secondary">Voltar</a>
+</html>
