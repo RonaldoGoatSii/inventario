@@ -10,7 +10,6 @@
 <div class="container mt-5">
     <h1>Criar Quiz</h1>
 
-    <!-- Formulário para criar o quiz -->
     {% if not quiz %}
       <form method="post" class="mb-4">
           {% csrf_token %}
@@ -82,13 +81,12 @@
       <button type="button" class="btn btn-secondary btn-sm btn-add-opcao">Adicionar uma nova Opção</button>
     </div>
 
-    <!-- Novo campo para resposta curta -->
+
     <div class="resposta-curta-container mb-3" style="display:none;">
       <label>Resposta Curta</label>
       <input type="text" name="resposta_curta[]" class="form-control mb-2" placeholder="Escolha a resposta correta">
     </div>
 
-    <!-- Novo campo para texto livre -->
     <div class="texto-livre-container mb-3" style="display:none;">
       <label>Conteúdo do Texto Livre</label>
       <textarea name="texto_livre[]" class="form-control mb-2" placeholder="O seu Texto"></textarea>
