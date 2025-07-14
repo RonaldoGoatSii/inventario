@@ -44,7 +44,7 @@ def criar_quiz_com_id(request, quiz_id):
         for i in range(len(textos)):
             texto_pergunta = textos[i]
             tipo_pergunta = tipos[i]
-            resposta_correta_pergunta = None  # Renomeado para resposta_correta
+            resposta_correta_pergunta = None  
 
             if tipo_pergunta == 'curta':
                 if idx_resposta_curta_global < len(respostas_curtas):
@@ -56,11 +56,10 @@ def criar_quiz_com_id(request, quiz_id):
                 quiz=quiz,  # Associando a pergunta ao quiz
                 texto=texto_pergunta,
                 tipo=tipo_pergunta,
-                resposta_correta=resposta_correta_pergunta  # Usando o novo nome do campo
+                resposta_correta=resposta_correta_pergunta  
             )
 
             if tipo_pergunta == 'multipla':
-                # Coleta as opções para a pergunta atual
                 current_pergunta_opcoes = []
                 while idx_opcao_global < len(opcoes_inputs) and opcoes_inputs[idx_opcao_global].strip():
                     current_pergunta_opcoes.append(opcoes_inputs[idx_opcao_global].strip())
@@ -68,10 +67,9 @@ def criar_quiz_com_id(request, quiz_id):
                 
                 for opcao_texto in current_pergunta_opcoes:
                     OpcaoResposta.objects.create(pergunta=pergunta, texto_opcao=opcao_texto)
-                
-                # Se houver um campo vazio que separa as opções de diferentes perguntas, consuma-o
+
                 if idx_opcao_global < len(opcoes_inputs) and not opcoes_inputs[idx_opcao_global].strip():
-                    idx_opcao_global += 1  # Consumir o separador vazio (se houver)
+                    idx_opcao_global += 1  
 
         messages.success(request, "Perguntas salvas com sucesso!")
         return redirect('criar_quiz_com_id', quiz_id=quiz.id)
